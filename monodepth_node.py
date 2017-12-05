@@ -13,6 +13,11 @@ from __future__ import absolute_import, division, print_function
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='0'
 
+import rospy
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
+import cv2
+
 import numpy as np
 import argparse
 import re
@@ -36,6 +41,33 @@ parser.add_argument('--input_width',      type=int,   help='input width', defaul
 
 args = parser.parse_args()
 
+params = monodepth_parameters(
+    encoder=args.encoder,
+    height=args.input_height,
+    width=args.input_width,
+    batch_size=2,
+    num_threads=1,
+    num_epochs=1,
+    do_stereo=False,
+    wrap_mode="border",
+    use_deconv=False,
+    alpha_image_loss=0,
+    disp_gradient_loss_weight=0,
+    lr_loss_weight=0,
+    full_summary=False)
+
+left = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
+model = MonodepthModel(params, "test", left, None)
+
+# SESSION
+config = tf.ConfigProto(allow_soft_placement=True)
+sess = tf.Session(config=config)
+
+# ROS Stuff
+cv_bridge = CvBridge()
+last_time = 0.0
+depth_image_pub = None
+
 def post_process_disparity(disp):
     _, h, w = disp.shape
     l_disp = disp[0,:,:]
@@ -46,21 +78,8 @@ def post_process_disparity(disp):
     r_mask = np.fliplr(l_mask)
     return r_mask * l_disp + l_mask * r_disp + (1.0 - l_mask - r_mask) * m_disp
 
-def test_simple(params):
+def initialize_network(params):
     """Test function."""
-
-    left  = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
-    model = MonodepthModel(params, "test", left, None)
-
-    input_image = scipy.misc.imread(args.image_path, mode="RGB")
-    original_height, original_width, num_channels = input_image.shape
-    input_image = scipy.misc.imresize(input_image, [args.input_height, args.input_width], interp='lanczos')
-    input_image = input_image.astype(np.float32) / 255
-    input_images = np.stack((input_image, np.fliplr(input_image)), 0)
-
-    # SESSION
-    config = tf.ConfigProto(allow_soft_placement=True)
-    sess = tf.Session(config=config)
 
     # SAVER
     train_saver = tf.train.Saver()
@@ -75,36 +94,60 @@ def test_simple(params):
     restore_path = args.checkpoint_path.split(".")[0]
     train_saver.restore(sess, restore_path)
 
+def run(data):
+    global last_time, depth_image_pub
+    if last_time + 2.5 > rospy.Time.now().to_sec():
+        return
+    last_time = rospy.Time.now().to_sec()
+
+    print("loading image")
+    start = time.clock()
+
+
+    try:
+        cv_image = cv_bridge.imgmsg_to_cv2(data, "rgb8")
+    except CvBridgeError as e:
+        print(e)
+        quit()
+
+    input_image = np.asarray(cv_image)
+    original_height, original_width, num_channels = input_image.shape
+    input_image = scipy.misc.imresize(input_image, [args.input_height, args.input_width], interp='lanczos')
+    input_image = input_image.astype(np.float32) / 255
+    input_images = np.stack((input_image, np.fliplr(input_image)), 0)
+
+    # RUN
     disp = sess.run(model.disp_left_est[0], feed_dict={left: input_images})
     disp_pp = post_process_disparity(disp.squeeze()).astype(np.float32)
 
-    output_directory = os.path.dirname(args.image_path)
-    output_name = os.path.splitext(os.path.basename(args.image_path))[0]
+    try:
+        depth_image_pub.publish(cv_bridge.cv2_to_imgmsg(disp_pp, "32FC1"))
+    except CvBridgeError as e:
+        print (e)
+        quit()
 
-    np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
-    disp_to_img = scipy.misc.imresize(disp_pp.squeeze(), [original_height, original_width])
-    plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
+    plt.imshow(disp_pp, cmap='plasma')
+    plt.pause(0.005)
 
-    print('done!')
+
+
+
+    # output_directory = os.path.dirname(args.image_path)
+    # output_name = os.path.splitext(os.path.basename(args.image_path))[0]
+    #
+    # np.save(os.path.join(output_directory, "{}_disp.npy".format(output_name)), disp_pp)
+    # plt.imsave(os.path.join(output_directory, "{}_disp.png".format(output_name)), disp_to_img, cmap='plasma')
+
+    print('done!, took {} seconds' .format(time.clock() - start))
 
 def main(_):
+    global depth_image_pub
+    initialize_network(params)
+    rospy.init_node('monodepth_node')
+    image_sub = rospy.Subscriber("camera/image_raw", Image, run)
+    depth_image_pub = rospy.Publisher("depth", Image)
+    rospy.spin()
 
-    params = monodepth_parameters(
-        encoder=args.encoder,
-        height=args.input_height,
-        width=args.input_width,
-        batch_size=2,
-        num_threads=1,
-        num_epochs=1,
-        do_stereo=False,
-        wrap_mode="border",
-        use_deconv=False,
-        alpha_image_loss=0,
-        disp_gradient_loss_weight=0,
-        lr_loss_weight=0,
-        full_summary=False)
-
-    test_simple(params)
 
 if __name__ == '__main__':
     tf.app.run()
