@@ -36,8 +36,8 @@ parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementatio
 parser.add_argument('--encoder',          type=str,   help='type of encoder, vgg or resnet50', default='vgg')
 parser.add_argument('--image_path',       type=str,   help='path to the image', default='images/room.png')
 parser.add_argument('--checkpoint_path',  type=str,   help='path to a specific checkpoint to load', default='models/model_eigen')
-parser.add_argument('--input_height',     type=int,   help='input height', default=256)
-parser.add_argument('--input_width',      type=int,   help='input width', default=512)
+parser.add_argument('--input_height',     type=int,   help='input height', default=240)
+parser.add_argument('--input_width',      type=int,   help='input width', default=320)
 
 args = parser.parse_args()
 
@@ -57,7 +57,7 @@ params = monodepth_parameters(
     full_summary=False)
 
 left = tf.placeholder(tf.float32, [2, args.input_height, args.input_width, 3])
-model = MonodepthModel(params, "test", left, None)
+model = MonodepthModel(params, "test", left, True)
 
 # SESSION
 config = tf.ConfigProto(allow_soft_placement=True)
@@ -96,7 +96,7 @@ def initialize_network(params):
 
 def run(data):
     global last_time, depth_image_pub
-    if last_time + 2.5 > rospy.Time.now().to_sec():
+    if last_time + 0.75 > rospy.Time.now().to_sec():
         return
     last_time = rospy.Time.now().to_sec()
 

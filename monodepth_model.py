@@ -54,7 +54,7 @@ class MonodepthModel(object):
             return
 
         self.build_losses()
-        self.build_summaries()     
+        self.build_summaries()
 
     def gradient_x(self, img):
         gx = img[:,:,:-1,:] - img[:,:,1:,:]
