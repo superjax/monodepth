@@ -127,7 +127,7 @@ def run(data):
         quit()
 
     plt.imshow(disp_pp, cmap='plasma')
-    plt.pause(0.005)
+    plt.pause(0.005)z
 
 
 
