@@ -20,6 +20,7 @@ import time
 from tqdm import tqdm
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
+import scipy.misc
 
 from monodepth_model import *
 from monodepth_dataloader import *
@@ -209,22 +210,31 @@ def run_test(params):
     num_test_samples = count_text_lines(args.filenames_file)
 
     print('now testing {} files'.format(num_test_samples))
-    disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
-    disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    mean_disparities = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    var_disparities = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    test_images = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    # disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     for step in tqdm(range(num_test_samples)):
-        disp = sess.run(model.disp_left_est[0])
-        disparities[step] = disp[0].squeeze()
-        disparities_pp[step] = post_process_disparity(disp.squeeze())
+        mean, var = sess.run(model.disp_avg, model.disp_var)
+        mean_disparities[step] = mean[0].squeeze()
+        var_disparities[step] = mean[0].squeeze()
+        test_images = model.disp_left_est
+        # disparities_pp[step] = post_process_disparity(disp.squeeze())
 
     print('done.')
 
-    print('writing disparities.')
+    print('writing images.')
     if args.output_directory == '':
         output_directory = os.path.dirname(args.checkpoint_path)
     else:
         output_directory = args.output_directory
-    np.save(output_directory + '/disparities.npy',    disparities)
-    np.save(output_directory + '/disparities_pp.npy', disparities_pp)
+    for i, (test_img, mean_img, var_img) in enumerate(tqdm(zip(test_images, mean_disparities, var_disparities))):
+        scipy.misc.imsave(args.output_directory + '/' +str(i).zfill(10) + '_test.jpg' , test_img)
+        scipy.misc.imsave(args.output_directory + '/' + str(i).zfill(10) + '_mean.jpg', mean_img)
+        scipy.misc.imsave(args.output_directory + '/' + str(i).zfill(10) + '_var.jpg', var_img)
+
+    # np.save(output_directory + '/disparities.npy',    disparities)
+    # np.save(output_directory + '/disparities_pp.npy', disparities_pp)
 
     print('done.')
 
@@ -252,3 +262,6 @@ def main(_):
 
 if __name__ == '__main__':
     tf.app.run()
+
+
+
