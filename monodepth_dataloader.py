@@ -64,8 +64,11 @@ class MonodepthDataloader(object):
                         params.batch_size, capacity, min_after_dequeue, params.num_threads)
 
         elif mode == 'test':
-            self.left_image_batch = tf.stack([left_image_o,  tf.image.flip_left_right(left_image_o)],  0)
-            self.left_image_batch.set_shape( [2, None, None, 3])
+            left_image_copied = tf.tile(tf.expand_dims(left_image_o, 0), [10, 1, 1, 1])
+            fliplr_image_copied = tf.tile(tf.expand_dims(tf.image.flip_left_right(left_image_o), 0), [10, 1, 1, 1])
+            self.left_image_batch = tf.concat([left_image_copied, fliplr_image_copied],  0)
+            self.left_image_batch.set_shape([None, None, None, 3])
+
 
             if self.params.do_stereo:
                 self.right_image_batch = tf.stack([right_image_o,  tf.image.flip_left_right(right_image_o)],  0)

@@ -184,7 +184,7 @@ def run_test(params):
     left  = dataloader.left_image_batch
     right = dataloader.right_image_batch
 
-    model = MonodepthModel(params, args.mode, left, right)
+    model = MonodepthModel(params, args.mode, left, right, drop_prob=0.85)
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
