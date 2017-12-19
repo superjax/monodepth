@@ -33,7 +33,7 @@ parser.add_argument('--model_name',                type=str,   help='model name'
 parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='resnet50')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
 parser.add_argument('--data_path',                 type=str,   help='path to the data', default='data/')
-parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/kitti_test_files.txt')
+parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/short_test_files.txt')
 parser.add_argument('--input_height',              type=int,   help='input height', default=256)
 parser.add_argument('--input_width',               type=int,   help='input width', default=384)
 parser.add_argument('--batch_size',                type=int,   help='batch size', default=40)
