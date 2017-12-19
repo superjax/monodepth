@@ -27,7 +27,7 @@ from average_gradients import *
 
 parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
 
-parser.add_argument('--mode',                      type=str,   help='train or test', default='train')
+parser.add_argument('--mode',                      type=str,   help='train or test', default='test')
 parser.add_argument('--model_name',                type=str,   help='model name', default='monodepth')
 parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='resnet50')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
@@ -47,8 +47,8 @@ parser.add_argument('--use_deconv',                            help='if set, wil
 parser.add_argument('--num_gpus',                  type=int,   help='number of GPUs to use for training', default=1)
 parser.add_argument('--num_threads',               type=int,   help='number of threads to use for data loading', default=40)
 parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='')
-parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='tmp')
-parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='')
+parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='test')
+parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='tmp/monodepth/model-36250')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
 parser.add_argument('--full_summary',                          help='if set, will keep more data for each summary. Warning: the file can become very large', action='store_true')
 
