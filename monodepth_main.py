@@ -215,10 +215,10 @@ def run_test(params):
     test_images = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     # disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     for step in tqdm(range(num_test_samples)):
-        mean, var = sess.run([model.disp_avg, model.disp_var])
+        mean, var, in_img = sess.run([model.disp_avg, model.disp_var, model.left[0]])
         mean_disparities[step] = mean.squeeze()
         var_disparities[step] = var.squeeze()
-        test_images = model.disp_left_est
+        test_images[step] = in_img
         # disparities_pp[step] = post_process_disparity(disp.squeeze())
 
     print('done.')
