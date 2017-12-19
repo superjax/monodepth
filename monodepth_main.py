@@ -184,7 +184,7 @@ def run_test(params):
     left  = dataloader.left_image_batch
     right = dataloader.right_image_batch
 
-    model = MonodepthModel(params, args.mode, left, right)
+    model = MonodepthModel(params, args.mode, left, right, drop_prob=0.85)
 
     # SESSION
     config = tf.ConfigProto(allow_soft_placement=True)
@@ -211,7 +211,7 @@ def run_test(params):
     print('now testing {} files'.format(num_test_samples))
     disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
-    for step in range(num_test_samples):
+    for step in tqdm(range(num_test_samples)):
         disp = sess.run(model.disp_left_est[0])
         disparities[step] = disp[0].squeeze()
         disparities_pp[step] = post_process_disparity(disp.squeeze())
