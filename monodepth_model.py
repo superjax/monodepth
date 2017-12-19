@@ -38,7 +38,7 @@ monodepth_parameters = namedtuple('parameters',
 class MonodepthModel(object):
     """monodepth model"""
 
-    def __init__(self, params, mode, left, right, reuse_variables=None, model_index=0, drop_prob=0.5):
+    def __init__(self, params, mode, left, right, reuse_variables=None, model_index=0, drop_prob=1.0):
         self.params = params
         self.mode = mode
         self.left = left
@@ -122,7 +122,7 @@ class MonodepthModel(object):
         return smoothness_x + smoothness_y
 
     def get_disp(self, x):
-        disp = tf.nn.dropout(self.conv(x, 2, 3, 1, tf.nn.sigmoid), self.drop_prob)
+	disp = self.conv(x, 2,3,1, tf.nn.sigmoid)
         return disp
 
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
@@ -209,7 +209,7 @@ class MonodepthModel(object):
 
             upconv4 = upconv(iconv5, 128, 3, 2) #H/8
             concat4 = tf.concat([upconv4, skip3], 3)
-            iconv4  = conv(concat4,  128, 3, 1)
+            iconv4  = tf.nn.dropout(conv(concat4,  128, 3, 1), self.drop_prob)
             self.disp4 = self.get_disp(iconv4)
             udisp4  = self.upsample_nn(self.disp4, 2)
 

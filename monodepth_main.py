@@ -27,7 +27,7 @@ from average_gradients import *
 
 parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementation.')
 
-parser.add_argument('--mode',                      type=str,   help='train or test', default='test')
+parser.add_argument('--mode',                      type=str,   help='train or test', default='train')
 parser.add_argument('--model_name',                type=str,   help='model name', default='monodepth')
 parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='resnet50')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
@@ -35,7 +35,7 @@ parser.add_argument('--data_path',                 type=str,   help='path to the
 parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/kitti_train_files.txt')
 parser.add_argument('--input_height',              type=int,   help='input height', default=256)
 parser.add_argument('--input_width',               type=int,   help='input width', default=384)
-parser.add_argument('--batch_size',                type=int,   help='batch size', default=24)
+parser.add_argument('--batch_size',                type=int,   help='batch size', default=48)
 parser.add_argument('--num_epochs',                type=int,   help='number of epochs', default=50)
 parser.add_argument('--learning_rate',             type=float, help='initial learning rate', default=1e-4)
 parser.add_argument('--lr_loss_weight',            type=float, help='left-right consistency weight', default=1.0)
@@ -48,7 +48,7 @@ parser.add_argument('--num_gpus',                  type=int,   help='number of G
 parser.add_argument('--num_threads',               type=int,   help='number of threads to use for data loading', default=40)
 parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='')
 parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='tmp')
-parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='tmp/monodepth/model-30250')
+parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
 parser.add_argument('--full_summary',                          help='if set, will keep more data for each summary. Warning: the file can become very large', action='store_true')
 
