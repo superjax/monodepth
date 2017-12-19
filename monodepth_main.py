@@ -33,10 +33,10 @@ parser.add_argument('--model_name',                type=str,   help='model name'
 parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='resnet50')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
 parser.add_argument('--data_path',                 type=str,   help='path to the data', default='data/')
-parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/kitti_test_files.txt')
+parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/short_test_files.txt')
 parser.add_argument('--input_height',              type=int,   help='input height', default=256)
 parser.add_argument('--input_width',               type=int,   help='input width', default=384)
-parser.add_argument('--batch_size',                type=int,   help='batch size', default=48)
+parser.add_argument('--batch_size',                type=int,   help='batch size', default=40)
 parser.add_argument('--num_epochs',                type=int,   help='number of epochs', default=50)
 parser.add_argument('--learning_rate',             type=float, help='initial learning rate', default=1e-4)
 parser.add_argument('--lr_loss_weight',            type=float, help='left-right consistency weight', default=1.0)
@@ -47,7 +47,7 @@ parser.add_argument('--wrap_mode',                 type=str,   help='bilinear sa
 parser.add_argument('--use_deconv',                            help='if set, will use transposed convolutions', action='store_true')
 parser.add_argument('--num_gpus',                  type=int,   help='number of GPUs to use for training', default=1)
 parser.add_argument('--num_threads',               type=int,   help='number of threads to use for data loading', default=40)
-parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='')
+parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='test')
 parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='test')
 parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='tmp/monodepth/model-36250')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
@@ -109,7 +109,7 @@ def train(params):
             for i in range(args.num_gpus):
                 with tf.device('/gpu:%d' % i):
 
-                    model = MonodepthModel(params, args.mode, left_splits[i], right_splits[i], reuse_variables, i)
+                    model = MonodepthModel(params, args.mode, left_splits[i], right_splits[i], reuse_variables, i, 0.90)
 
                     loss = model.total_loss
                     tower_losses.append(loss)
