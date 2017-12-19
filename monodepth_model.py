@@ -316,6 +316,7 @@ class MonodepthModel(object):
 
         if self.mode == 'test':
             self.disp_avg, self.disp_var = tf.nn.moments(self.disp1, axes=0)
+            return
 
         # GENERATE IMAGES
         with tf.variable_scope('images'):
