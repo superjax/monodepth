@@ -17,6 +17,7 @@ import numpy as np
 import argparse
 import re
 import time
+from tqdm import tqdm
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
@@ -28,13 +29,13 @@ parser = argparse.ArgumentParser(description='Monodepth TensorFlow implementatio
 
 parser.add_argument('--mode',                      type=str,   help='train or test', default='train')
 parser.add_argument('--model_name',                type=str,   help='model name', default='monodepth')
-parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='vgg')
+parser.add_argument('--encoder',                   type=str,   help='type of encoder, vgg or resnet50', default='resnet50')
 parser.add_argument('--dataset',                   type=str,   help='dataset to train on, kitti, or cityscapes', default='kitti')
-parser.add_argument('--data_path',                 type=str,   help='path to the data', default='data/KITTI/')
+parser.add_argument('--data_path',                 type=str,   help='path to the data', default='../data/KITTI/')
 parser.add_argument('--filenames_file',            type=str,   help='path to the filenames text file', default='utils/filenames/kitti_train_files.txt')
 parser.add_argument('--input_height',              type=int,   help='input height', default=256)
 parser.add_argument('--input_width',               type=int,   help='input width', default=384)
-parser.add_argument('--batch_size',                type=int,   help='batch size', default=48)
+parser.add_argument('--batch_size',                type=int,   help='batch size', default=24)
 parser.add_argument('--num_epochs',                type=int,   help='number of epochs', default=50)
 parser.add_argument('--learning_rate',             type=float, help='initial learning rate', default=1e-4)
 parser.add_argument('--lr_loss_weight',            type=float, help='left-right consistency weight', default=1.0)
@@ -133,7 +134,8 @@ def train(params):
         sess = tf.Session(config=config)
 
         # SAVER
-        summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name, sess.graph)
+        start_time = str(time.time())
+        summary_writer = tf.summary.FileWriter(args.log_directory + '/' + args.model_name + '/' + start_time, sess.graph)
         train_saver = tf.train.Saver()
 
         # COUNT PARAMS
@@ -158,7 +160,7 @@ def train(params):
         # GO!
         start_step = global_step.eval(session=sess)
         start_time = time.time()
-        for step in range(start_step, num_total_steps):
+        for step in tqdm(range(start_step, num_total_steps)):
             before_op_time = time.time()
             _, loss_value = sess.run([apply_gradient_op, total_loss])
             duration = time.time() - before_op_time
@@ -175,56 +177,56 @@ def train(params):
 
         train_saver.save(sess, args.log_directory + '/' + args.model_name + '/model', global_step=num_total_steps)
 
-# def test(params):
-#     """Test function."""
-#
-#     dataloader = MonodepthDataloader(args.data_path, args.filenames_file, params, args.dataset, args.mode)
-#     left  = dataloader.left_image_batch
-#     right = dataloader.right_image_batch
-#
-#     model = MonodepthModel(params, args.mode, left, right)
-#
-#     # SESSION
-#     config = tf.ConfigProto(allow_soft_placement=True)
-#     sess = tf.Session(config=config)
-#
-#     # SAVER
-#     train_saver = tf.train.Saver()
-#
-#     # INIT
-#     sess.run(tf.global_variables_initializer())
-#     sess.run(tf.local_variables_initializer())
-#     coordinator = tf.train.Coordinator()
-#     threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
-#
-#     # RESTORE
-#     if args.checkpoint_path == '':
-#         restore_path = tf.train.latest_checkpoint(args.log_directory + '/' + args.model_name)
-#     else:
-#         restore_path = args.checkpoint_path.split(".")[0]
-#     train_saver.restore(sess, restore_path)
-#
-#     num_test_samples = count_text_lines(args.filenames_file)
-#
-#     print('now testing {} files'.format(num_test_samples))
-#     disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
-#     disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
-#     for step in range(num_test_samples):
-#         disp = sess.run(model.disp_left_est[0])
-#         disparities[step] = disp[0].squeeze()
-#         disparities_pp[step] = post_process_disparity(disp.squeeze())
-#
-#     print('done.')
-#
-#     print('writing disparities.')
-#     if args.output_directory == '':
-#         output_directory = os.path.dirname(args.checkpoint_path)
-#     else:
-#         output_directory = args.output_directory
-#     np.save(output_directory + '/disparities.npy',    disparities)
-#     np.save(output_directory + '/disparities_pp.npy', disparities_pp)
-#
-#     print('done.')
+def run_test(params):
+    """Test function."""
+
+    dataloader = MonodepthDataloader(args.data_path, args.filenames_file, params, args.dataset, args.mode)
+    left  = dataloader.left_image_batch
+    right = dataloader.right_image_batch
+
+    model = MonodepthModel(params, args.mode, left, right)
+
+    # SESSION
+    config = tf.ConfigProto(allow_soft_placement=True)
+    sess = tf.Session(config=config)
+
+    # SAVER
+    train_saver = tf.train.Saver()
+
+    # INIT
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
+    coordinator = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coordinator)
+
+    # RESTORE
+    if args.checkpoint_path == '':
+        restore_path = tf.train.latest_checkpoint(args.log_directory + '/' + args.model_name)
+    else:
+        restore_path = args.checkpoint_path.split(".")[0]
+    train_saver.restore(sess, restore_path)
+
+    num_test_samples = count_text_lines(args.filenames_file)
+
+    print('now testing {} files'.format(num_test_samples))
+    disparities    = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    for step in range(num_test_samples):
+        disp = sess.run(model.disp_left_est[0])
+        disparities[step] = disp[0].squeeze()
+        disparities_pp[step] = post_process_disparity(disp.squeeze())
+
+    print('done.')
+
+    print('writing disparities.')
+    if args.output_directory == '':
+        output_directory = os.path.dirname(args.checkpoint_path)
+    else:
+        output_directory = args.output_directory
+    np.save(output_directory + '/disparities.npy',    disparities)
+    np.save(output_directory + '/disparities_pp.npy', disparities_pp)
+
+    print('done.')
 
 def main(_):
 
@@ -246,7 +248,7 @@ def main(_):
     if args.mode == 'train':
         train(params)
     elif args.mode == 'test':
-        test(params)
+        run_test(params)
 
 if __name__ == '__main__':
     tf.app.run()

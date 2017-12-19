@@ -38,11 +38,12 @@ monodepth_parameters = namedtuple('parameters',
 class MonodepthModel(object):
     """monodepth model"""
 
-    def __init__(self, params, mode, left, right, reuse_variables=None, model_index=0):
+    def __init__(self, params, mode, left, right, reuse_variables=None, model_index=0, drop_prob=0.5):
         self.params = params
         self.mode = mode
         self.left = left
         self.right = right
+        self.drop_prob = drop_prob
         self.model_collection = ['model_' + str(model_index)]
 
         self.reuse_variables = reuse_variables
@@ -121,7 +122,7 @@ class MonodepthModel(object):
         return smoothness_x + smoothness_y
 
     def get_disp(self, x):
-        disp = 0.3 * self.conv(x, 2, 3, 1, tf.nn.sigmoid)
+        disp = tf.nn.dropout(self.conv(x, 2, 3, 1, tf.nn.sigmoid), self.drop_prob)
         return disp
 
     def conv(self, x, num_out_layers, kernel_size, stride, activation_fn=tf.nn.elu):
@@ -226,7 +227,7 @@ class MonodepthModel(object):
 
             upconv1 = upconv(iconv2,  16, 3, 2) #H
             concat1 = tf.concat([upconv1, udisp2], 3)
-            iconv1  = conv(concat1,   16, 3, 1)
+            iconv1 = conv(concat1,   16, 3, 1)
             self.disp1 = self.get_disp(iconv1)
 
     def build_resnet50(self):
