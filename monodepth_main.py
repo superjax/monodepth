@@ -212,7 +212,7 @@ def run_test(params):
     print('now testing {} files'.format(num_test_samples))
     mean_disparities = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     var_disparities = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
-    test_images = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
+    test_images = np.zeros((num_test_samples, params.height, params.width, 3), dtype=np.float32)
     # disparities_pp = np.zeros((num_test_samples, params.height, params.width), dtype=np.float32)
     for step in tqdm(range(num_test_samples)):
         mean, var, in_img = sess.run([model.disp_avg, model.disp_var, model.left[0]])
