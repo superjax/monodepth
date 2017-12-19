@@ -310,7 +310,7 @@ class MonodepthModel(object):
     def build_outputs(self):
         # STORE DISPARITIES
         with tf.variable_scope('disparities'):
-            self.disp_est  = [self.disp1, self.disp2, self.disp3, self.disp4]1
+            self.disp_est  = [self.disp1, self.disp2, self.disp3, self.disp4]
             self.disp_left_est  = [tf.expand_dims(d[:,:,:,0], 3) for d in self.disp_est]
             self.disp_right_est = [tf.expand_dims(d[:,:,:,1], 3) for d in self.disp_est]
 
