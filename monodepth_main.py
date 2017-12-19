@@ -46,7 +46,7 @@ parser.add_argument('--wrap_mode',                 type=str,   help='bilinear sa
 parser.add_argument('--use_deconv',                            help='if set, will use transposed convolutions', action='store_true')
 parser.add_argument('--num_gpus',                  type=int,   help='number of GPUs to use for training', default=1)
 parser.add_argument('--num_threads',               type=int,   help='number of threads to use for data loading', default=40)
-parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='')
+parser.add_argument('--output_directory',          type=str,   help='output directory for test disparities, if empty outputs to checkpoint folder', default='test')
 parser.add_argument('--log_directory',             type=str,   help='directory to save checkpoints and summaries', default='test')
 parser.add_argument('--checkpoint_path',           type=str,   help='path to a specific checkpoint to load', default='tmp/monodepth/model-36250')
 parser.add_argument('--retrain',                               help='if used with checkpoint_path, will restart training from step zero', action='store_true')
