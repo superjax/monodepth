@@ -315,7 +315,7 @@ class MonodepthModel(object):
             self.disp_right_est = [tf.expand_dims(d[:,:,:,1], 3) for d in self.disp_est]
 
         if self.mode == 'test':
-            self.disp_avg, self.disp_var = tf.nn.moments(self.disp1[:,:,:,0], axes=0)
+            self.disp_avg, self.disp_var = tf.nn.moments(1.0/self.disp1[:,:,:,0], axes=0)
             return
 
         # GENERATE IMAGES
