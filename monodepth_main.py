@@ -21,6 +21,7 @@ from tqdm import tqdm
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 import scipy.misc
+import cPickle
 
 from monodepth_model import *
 from monodepth_dataloader import *
@@ -232,6 +233,10 @@ def run_test(params):
         scipy.misc.imsave(args.output_directory + '/' +str(i).zfill(10) + '_test.jpg' , test_img)
         scipy.misc.imsave(args.output_directory + '/' + str(i).zfill(10) + '_mean.jpg', mean_img)
         scipy.misc.imsave(args.output_directory + '/' + str(i).zfill(10) + '_var.jpg', var_img)
+    output_data = {'test': test_images,
+                   'mean': mean_disparities,
+                   'var': var_disparities}
+    cPickle.dump(output_data, open(args.output_directory + '/' + 'output_data.pkl', 'rb'))
 
     # np.save(output_directory + '/disparities.npy',    disparities)
     # np.save(output_directory + '/disparities_pp.npy', disparities_pp)
